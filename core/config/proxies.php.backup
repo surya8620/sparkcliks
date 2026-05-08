@@ -1,0 +1,288 @@
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| PROXY DEFINITIONS - ADD NEW PROXIES HERE ONLY!
+|--------------------------------------------------------------------------
+|
+| To add a new proxy, simply add one entry to the array below.
+| Format: 'proxy_code' => ['port' => 'PORT', 'label' => 'COUNTRY NAME', 'type' => 'premium|adfree']
+|
+| Example: 'adfree_mx' => ['port' => '10127', 'label' => 'Mexico', 'type' => 'adfree'],
+|
+*/
+$proxyDefinitions = [
+    // Premium Proxies
+    'premium_worldwide' => ['port' => '18801', 'label' => 'Worldwide', 'type' => 'premium'],
+    'premium_us'        => ['port' => '18802', 'label' => 'United States', 'type' => 'premium'],
+    
+    // Ad-Free Proxies
+    'adfree_worldwide' => ['port' => '10005', 'label' => 'Worldwide', 'type' => 'adfree'],
+    'adfree_al'        => ['port' => '10125', 'label' => 'Albania', 'type' => 'adfree'],
+    'adfree_au'        => ['port' => '10104', 'label' => 'Australia', 'type' => 'adfree'],
+    'adfree_br'        => ['port' => '10111', 'label' => 'Brazil', 'type' => 'adfree'],
+    'adfree_ca'        => ['port' => '10103', 'label' => 'Canada', 'type' => 'adfree'],
+    'adfree_ch'        => ['port' => '10112', 'label' => 'Switzerland', 'type' => 'adfree'],
+    'adfree_de'        => ['port' => '10105', 'label' => 'Germany', 'type' => 'adfree'],
+    'adfree_es'        => ['port' => '10127', 'label' => 'Spain', 'type' => 'adfree'],
+    'adfree_fr'        => ['port' => '10106', 'label' => 'France', 'type' => 'adfree'],
+    'adfree_hk'        => ['port' => '10116', 'label' => 'Hongkong', 'type' => 'adfree'],
+    'adfree_ie'        => ['port' => '10119', 'label' => 'Ireland', 'type' => 'adfree'],
+    'adfree_in'        => ['port' => '19901', 'label' => 'India', 'type' => 'adfree'],
+    'adfree_it'        => ['port' => '10113', 'label' => 'Italy', 'type' => 'adfree'],
+    'adfree_jp'        => ['port' => '10109', 'label' => 'Japan', 'type' => 'adfree'],
+    'adfree_kz'        => ['port' => '10124', 'label' => 'Kazakhstan', 'type' => 'adfree'],
+    'adfree_kr'        => ['port' => '10118', 'label' => 'South Korea', 'type' => 'adfree'],
+    'adfree_nl'        => ['port' => '10107', 'label' => 'Netherlands', 'type' => 'adfree'],
+    'adfree_pk'        => ['port' => '10121', 'label' => 'Pakistan', 'type' => 'adfree'],
+    'adfree_pl'        => ['port' => '10114', 'label' => 'Poland', 'type' => 'adfree'],
+    'adfree_qa'        => ['port' => '10122', 'label' => 'Qatar', 'type' => 'adfree'],
+    'adfree_ro'        => ['port' => '10126', 'label' => 'Romania', 'type' => 'adfree'],
+    'adfree_sa'        => ['port' => '10120', 'label' => 'Saudi Arabia', 'type' => 'adfree'],
+    'adfree_sg'        => ['port' => '10108', 'label' => 'Singapore', 'type' => 'adfree'],
+    'adfree_th'        => ['port' => '10123', 'label' => 'Thailand', 'type' => 'adfree'],
+    'adfree_tr'        => ['port' => '10115', 'label' => 'Turkey', 'type' => 'adfree'],
+    'adfree_tw'        => ['port' => '10117', 'label' => 'Taiwan', 'type' => 'adfree'],
+    'adfree_uk'        => ['port' => '10102', 'label' => 'United Kingdom', 'type' => 'adfree'],
+    'adfree_us'        => ['port' => '10001', 'label' => 'United States', 'type' => 'adfree'],
+];
+
+/*
+|--------------------------------------------------------------------------
+| AUTO-GENERATED ARRAYS - DO NOT EDIT BELOW THIS LINE
+|--------------------------------------------------------------------------
+|
+| These arrays are automatically generated from $proxyDefinitions above.
+|
+*/
+
+// Auto-generate port_map
+$portMap = [];
+foreach ($proxyDefinitions as $code => $config) {
+    $portMap[$config['port']] = $code;
+}
+
+// Auto-generate proxy_urls
+$proxyUrls = [];
+foreach ($proxyDefinitions as $code => $config) {
+    $subdomain = $config['type'] === 'premium' ? 'premium-proxy' : 'adfree-proxy';
+    $proxyUrls[$code] = "{$subdomain}.sparkcliks.com:{$config['port']}";
+}
+
+// Auto-generate proxy_labels
+$proxyLabels = [];
+foreach ($proxyDefinitions as $code => $config) {
+    $proxyLabels[$code] = $config['label'];
+}
+
+// Auto-generate groups
+$groups = [
+    'Premium Proxy' => [],
+    'Ad-Free Proxy' => [],
+];
+foreach ($proxyDefinitions as $code => $config) {
+    if ($config['type'] === 'premium') {
+        $groups['Premium Proxy'][] = $code;
+    } else {
+        $groups['Ad-Free Proxy'][] = $code;
+    }
+}
+
+return [
+    /*
+    |--------------------------------------------------------------------------
+    | Proxy Domain
+    |--------------------------------------------------------------------------
+    |
+    | The base domain used for all proxy servers (both premium and ad-free)
+    |
+    */
+    'domain' => 'sparkcliks.com',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Default Proxy
+    |--------------------------------------------------------------------------
+    |
+    | The default proxy type to use when no proxy is configured
+    |
+    */
+    'default' => 'premium_worldwide',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Proxy Port Mapping (AUTO-GENERATED)
+    |--------------------------------------------------------------------------
+    |
+    | Maps proxy server ports to their corresponding proxy type codes.
+    | Generated automatically from $proxyDefinitions above.
+    |
+    */
+    'port_map' => $portMap,
+        // Premium Proxy ports
+        '18801' => 'premium_worldwide',
+        '18802' => 'premium_us',
+        
+        // Ad-Free Proxy ports
+        '10005' => 'adfree_worldwide',
+        '10001' => 'adfree_us',
+        '10102' => 'adfree_uk',
+        '10103' => 'adfree_ca',
+        '10104' => 'adfree_au',
+        '10105' => 'adfree_de',
+        '10106' => 'adfree_fr',
+        '10107' => 'adfree_nl',
+        '10108' => 'adfree_sg',
+        '10109' => 'adfree_jp',
+        '19901' => 'adfree_in',
+        '10111' => 'adfree_br',
+        '10112' => 'adfree_ch',
+        '10113' => 'adfree_it',
+        '10114' => 'adfree_pl',
+        '10115' => 'adfree_tr',
+        '10116' => 'adfree_hk',
+        '10117' => 'adfree_tw',
+        '10118' => 'adfree_kr',
+        '10119' => 'adfree_ie',
+        '10120' => 'adfree_sa',
+        '10121' => 'adfree_pk',
+        '10122' => 'adfree_qa',
+        '10123' => 'adfree_th',
+        '10124' => 'adfree_kz',
+        '10125' => 'adfree_al',
+        '10126' => 'adfree_ro',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Proxy URLs
+    |--------------------------------------------------------------------------
+    |
+    | Full proxy URLs for each proxy type code.
+    | These are the actual proxy addresses stored in the database.
+    |
+    */
+    'proxy_urls' => [
+        // Premium Proxy URLs
+        'premium_worldwide' => 'premium-proxy.sparkcliks.com:18801',
+        'premium_us' => 'premium-proxy.sparkcliks.com:18802',
+        
+        // Ad-Free Proxy URLs
+        'adfree_worldwide' => 'adfree-proxy.sparkcliks.com:10005',
+        'adfree_us' => 'adfree-proxy.sparkcliks.com:10001',
+        'adfree_uk' => 'adfree-proxy.sparkcliks.com:10002',
+        'adfree_ca' => 'adfree-proxy.sparkcliks.com:10003',
+        'adfree_au' => 'adfree-proxy.sparkcliks.com:10004',
+        'adfree_de' => 'adfree-proxy.sparkcliks.com:10005',
+        'adfree_fr' => 'adfree-proxy.sparkcliks.com:10006',
+        'adfree_nl' => 'adfree-proxy.sparkcliks.com:10007',
+        'adfree_sg' => 'adfree-proxy.sparkcliks.com:10008',
+        'adfree_jp' => 'adfree-proxy.sparkcliks.com:10009',
+        'adfree_in' => 'adfree-proxy.sparkcliks.com:19901',
+        'adfree_br' => 'adfree-proxy.sparkcliks.com:10011',
+        'adfree_ch' => 'adfree-proxy.sparkcliks.com:10012',
+        'adfree_it' => 'adfree-proxy.sparkcliks.com:10013',
+        'adfree_pl' => 'adfree-proxy.sparkcliks.com:10014',
+        'adfree_tr' => 'adfree-proxy.sparkcliks.com:10015',
+        'adfree_hk' => 'adfree-proxy.sparkcliks.com:10016',
+        'adfree_tw' => 'adfree-proxy.sparkcliks.com:10017',
+        'adfree_kr' => 'adfree-proxy.sparkcliks.com:10018',
+        'adfree_ie' => 'adfree-proxy.sparkcliks.com:10019',
+        'adfree_sa' => 'adfree-proxy.sparkcliks.com:10020',
+        'adfree_pk' => 'adfree-proxy.sparkcliks.com:10021',
+        'adfree_qa' => 'adfree-proxy.sparkcliks.com:10022',
+        'adfree_th' => 'adfree-proxy.sparkcliks.com:10023',
+        'adfree_kz' => 'adfree-proxy.sparkcliks.com:10024',
+        'adfree_al' => 'adfree-proxy.sparkcliks.com:10025',
+        'adfree_ro' => 'adfree-proxy.sparkcliks.com:10026',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Proxy Display Labels
+    |--------------------------------------------------------------------------
+    |
+    | Human-readable labels for each proxy type code.
+    | Used in dropdowns and UI displays.
+    |
+    */
+    'proxy_labels' => [
+        // Premium Proxy
+        'premium_worldwide' => 'Worldwide',
+        'premium_us' => 'United States',
+        
+        // Ad-Free Proxy
+        'adfree_worldwide' => 'Worldwide',
+        'adfree_al' => 'Albania',
+        'adfree_au' => 'Australia',
+        'adfree_br' => 'Brazil',
+        'adfree_ca' => 'Canada',
+        'adfree_fr' => 'France',
+        'adfree_de' => 'Germany',
+        'adfree_hk' => 'Hongkong',
+        'adfree_in' => 'India',
+        'adfree_ie' => 'Ireland',
+        'adfree_it' => 'Italy',
+        'adfree_jp' => 'Japan',
+        'adfree_kz' => 'Kazakhstan',
+        'adfree_nl' => 'Netherlands',
+        'adfree_pk' => 'Pakistan',
+        'adfree_pl' => 'Poland',
+        'adfree_qa' => 'Qatar',
+        'adfree_ro' => 'Romania',
+        'adfree_sa' => 'Saudi Arabia',
+        'adfree_sg' => 'Singapore',
+        'adfree_kr' => 'South Korea',
+        'adfree_es' => 'Spain',
+        'adfree_ch' => 'Switzerland',
+        'adfree_tw' => 'Taiwan',
+        'adfree_th' => 'Thailand',
+        'adfree_tr' => 'Turkey',
+        'adfree_uk' => 'United Kingdom',
+        'adfree_us' => 'United States',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Proxy Groups
+    |--------------------------------------------------------------------------
+    |
+    | Groups proxy types for organized display in dropdowns
+    |
+    */
+    'groups' => [
+        'Premium Proxy' => [
+            'premium_worldwide',
+            'premium_us',
+        ],
+        'Ad-Free Proxy' => [
+            'adfree_worldwide',
+            'adfree_al',
+            'adfree_au',
+            'adfree_br',
+            'adfree_ca',
+            'adfree_fr',
+            'adfree_de',
+            'adfree_hk',
+            'adfree_in',
+            'adfree_ie',
+            'adfree_it',
+            'adfree_jp',
+            'adfree_kz',
+            'adfree_nl',
+            'adfree_pk',
+            'adfree_pl',
+            'adfree_qa',
+            'adfree_ro',
+            'adfree_sa',
+            'adfree_sg',
+            'adfree_kr',
+            'adfree_ch',
+            'adfree_tw',
+            'adfree_th',
+            'adfree_tr',
+            'adfree_uk',
+            'adfree_us',
+        ],
+    ],
+];

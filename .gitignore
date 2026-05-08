@@ -1,0 +1,29 @@
+# Environment files - NEVER commit these
+.env
+.env.*
+!.env.example
+core/.env_old
+
+# Laravel vendor & build artifacts
+core/vendor/
+core/node_modules/
+core/public/build/
+core/public/hot/
+core/public/storage/
+core/storage/*.key
+core/bootstrap/cache/*.php
+
+# Runtime logs & cache
+core/storage/logs/*.log
+core/storage/framework/cache/
+core/storage/framework/sessions/
+core/storage/framework/views/
+core/.phpunit.cache
+core/.phpunit.result.cache
+
+# IDE / OS files
+.DS_Store
+Thumbs.db
+/.idea
+/.vscode
+/.fleet

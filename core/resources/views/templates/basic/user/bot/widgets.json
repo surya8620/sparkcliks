@@ -1,0 +1,41 @@
+{
+    "url": {
+        "key": "url_widget",
+        "title": "URL",
+        "subtitle": "Add a URL",
+        "icon": "las la-link",
+        "type": "input",
+        "input_type": "text",
+        "placeholder": "Navigate to URL",
+        "params": [],
+        "keyword": ["url", "link"],
+        "disable": false
+    },
+    "scroll": {
+        "key": "scroll_widget",
+        "title": "Random Scroll",
+        "subtitle": "Scroll Indicator",
+        "icon": "las la-scroll",
+        "type": "indicator",
+        "keyword": ["scroll", "down"],
+        "disable": false
+    },
+    "scroll-up": {
+        "key": "scroll_widget",
+        "title": "Scroll Up",
+        "subtitle": "Scroll Indicator",
+        "icon": "las la-scroll",
+        "type": "indicator",
+        "keyword": ["scroll", "down"],
+        "disable": true
+    },
+    "Wait": {
+        "key": "delay_widget",
+        "title": "Wait",
+        "subtitle": "Set a Delay",
+        "icon": "las la-clock",
+        "type": "delay",
+        "keyword": ["url", "link"],
+        "disable": false
+    }
+}

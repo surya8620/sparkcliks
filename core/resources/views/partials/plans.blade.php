@@ -1,0 +1,14 @@
+<option value="">@lang("Choose Pack...")</option>
+<option value="2">@lang("SEO Membership Pack - LITE")</option>
+<option value="3">@lang("SEO Membership Pack - BASIC")</option>
+<option value="4">@lang("SEO Membership Pack - BRONZE")</option>
+<option value="5">@lang("SEO Membership Pack - SILVER")</option>
+<option value="6">@lang("SEO Membership Pack - GOLD")</option>
+<option value="7">@lang("SEO Membership Pack - PLATINUM")</option>
+<option value="8">@lang("SEO Membership Pack - DIAMOND")</option>
+<option value="9">@lang("SEO One Time Pack - $150")</option>
+<option value="10">@lang("SEO One Time Pack - $250")</option>
+<option value="11">@lang("SEO One Time Pack - $500")</option>
+<option value="12">@lang("SEO One Time Pack - $1000")</option>
+<option value="13">@lang("SEO One Time Pack - $2500")</option>
+<option value="14">@lang("SEO One Time Pack - $5000")</option>

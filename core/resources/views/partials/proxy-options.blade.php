@@ -1,0 +1,33 @@
+<optgroup label="Premium Proxy">
+    <option value="premium_worldwide">Worldwide</option>
+    <option value="premium_us">United States</option>
+</optgroup>
+<optgroup label="Ad-Free Proxy">
+    <option value="adfree_worldwide">Worldwide</option>
+    <option value="adfree_al">Albania</option>
+    <option value="adfree_au">Australia</option>
+    <option value="adfree_br">Brazil</option>
+    <option value="adfree_ca">Canada</option>
+    <option value="adfree_fr">France</option>
+    <option value="adfree_de">Germany</option>
+    <option value="adfree_hk">Hongkong</option>
+    <option value="adfree_in">India</option>
+    <option value="adfree_ie">Ireland</option>
+    <option value="adfree_it">Italy</option>
+    <option value="adfree_jp">Japan</option>
+    <option value="adfree_kz">Kazakhstan</option>
+    <option value="adfree_nl">Netherlands</option>
+    <option value="adfree_pk">Pakistan</option>
+    <option value="adfree_pl">Poland</option>
+    <option value="adfree_qa">Qatar</option>
+    <option value="adfree_ro">Romania</option>
+    <option value="adfree_sa">Saudi Arabia</option>
+    <option value="adfree_sg">Singapore</option>
+    <option value="adfree_kr">South Korea</option>
+    <option value="adfree_ch">Switzerland</option>
+    <option value="adfree_tw">Taiwan</option>
+    <option value="adfree_th">Thailand</option>
+    <option value="adfree_tr">Turkey</option>
+    <option value="adfree_uk">United Kingdom</option>
+    <option value="adfree_us">United States</option>
+</optgroup>
