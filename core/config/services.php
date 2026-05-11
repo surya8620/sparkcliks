@@ -31,4 +31,8 @@ return [
         ],
     ],
 
+    'quickemailverification' => [
+        'key' => env('QEV_API_KEY'),
+    ],
+
 ];

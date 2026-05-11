@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use App\Lib\CurlRequest;
+use App\Rules\NotDisposableEmail;
 use Illuminate\Support\Str;
 
 class RegisterController extends Controller
@@ -51,30 +49,8 @@ class RegisterController extends Controller
             $agree = 'required';
         }
 
-    	// Make the API request to validate the email
-    	$response = Http::get('http://api.quickemailverification.com/v1/verify', [
-    	    'email' => $data['email'],
-    	    'apikey' => '66be7e344d29da69543448744ad691de4c4d2fb217823055032462059c63' // Replace with your actual API key
-    	]);
-	    $emailVerification = $response->json();
-        // Check if the email is disposable or invalid based on the response indisposable
-    	if ($emailVerification['disposable'] === 'true') {
-        	return Validator::make([], [
-	            'email' => 'required',
-        	], [
-	            'email.required' => 'Disposable email addresses are not allowed.',
-	        ]);
-	    }
-
-	    if ($emailVerification['result'] === 'invalid') {
- 	       return Validator::make([], [
- 	           'email' => 'required',
- 	       ], [
- 	           'email.required' => 'Invalid email address.',
-  	      ]);
- 	   }
         $validate = Validator::make($data, [
-            'email'     => 'required|string|email|unique:users',
+            'email'     => ['required', 'string', 'email', 'unique:users', new NotDisposableEmail()],
             'password'  => ['required', 'confirmed', $passwordValidation],
             'captcha'   => 'sometimes|required',
             'agree'     => $agree

@@ -6,6 +6,7 @@ use App\Constants\Status;
 use App\Models\AdminNotification;
 use App\Models\User;
 use App\Models\UserLogin;
+use App\Rules\NotDisposableEmail;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -78,6 +79,22 @@ class SocialLogin
         if (!$userData) {
             if (!gs('registration')) {
                 throw new Exception('New account registration is currently disabled');
+            }
+
+            // Run the same disposable / temp-email check as regular registration.
+            // Skip if the provider is Google and the email is a native @gmail.com address.
+            $emailToCheck = strtolower(trim((string) ($user->email ?? '')));
+            $isGmailFromGoogle = ($this->provider === 'google') && str_ends_with($emailToCheck, '@gmail.com');
+
+            if ($emailToCheck && !$isGmailFromGoogle) {
+                $notDisposable = new NotDisposableEmail();
+                $failed = false;
+                $notDisposable->validate('email', $emailToCheck, function ($msg) use (&$failed) {
+                    $failed = $msg;
+                });
+                if ($failed) {
+                    throw new Exception($failed);
+                }
             }
 
             $userData = $this->createUser($user, $this->provider);
