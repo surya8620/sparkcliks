@@ -307,7 +307,7 @@
                 </div>
             </li>
             <li class="sidebar-menu-list__item">
-                 <a class="sidebar-menu-list__link" href="https://app.sparkproxy.io">
+                 <a class="sidebar-menu-list__link" href="{{ route('user.sparkproxy.sso') }}">
                     <span class="icon">
                     </span>
                     <span class="text" style="font-size: 14px;">
