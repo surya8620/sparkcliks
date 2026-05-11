@@ -78,6 +78,14 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Prevent Laravel's framework fallback from calling route('login') which doesn't exist.
+        // This app uses route('user.login') as its login route.
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if (! $request->expectsJson()) {
+                return redirect()->guest(route('user.login'));
+            }
+        });
+
         $exceptions->shouldRenderJsonWhen(function () {
             if (request()->is('api/*')) {
                 return true;
