@@ -8,8 +8,11 @@ use Illuminate\Support\Facades\Auth;
 class SsoController extends Controller
 {
     /**
-     * Generate a short-lived HMAC-signed SSO token and redirect the logged-in
-     * user to SparkProxy so they are automatically provisioned and logged in.
+     * Generate a short-lived encrypted+signed SSO token and show a preloader
+     * that auto-redirects the user to SparkProxy.
+     *
+     * Profile fields are only included the first time (sparkproxy_synced = 0).
+     * Subsequent visits send only email + expiry, keeping the token minimal.
      */
     public function redirectToSparkProxy()
     {
@@ -20,18 +23,53 @@ class SsoController extends Controller
             abort(500, 'SSO is not configured. Please set SSO_SECRET in .env.');
         }
 
-        $payload = base64_encode(json_encode([
-            'email'     => $user->email,
-            'firstname' => $user->firstname ?? '',
-            'lastname'  => $user->lastname  ?? '',
-            'exp'       => time() + 60,  // token valid for 60 seconds
-        ]));
+        $isFirstSync = !$user->sparkproxy_synced;
 
+        if ($isFirstSync) {
+            $data = [
+                'email'        => $user->email,
+                'firstname'    => $user->firstname    ?? '',
+                'lastname'     => $user->lastname     ?? '',
+                'mobile'       => $user->mobile       ?? '',
+                'dial_code'    => $user->dial_code    ?? '',
+                'country'      => $user->country      ?? '',
+                'country_code' => $user->country_code ?? '',
+                'address'      => $user->address      ?? '',
+                'city'         => $user->city         ?? '',
+                'state'        => $user->state        ?? '',
+                'zip'          => $user->zip          ?? '',
+                'org'          => $user->org          ?? '',
+                'vat'          => $user->vat          ?? '',
+                'exp'          => time() + 60,
+            ];
+        } else {
+            // Already synced — send minimal token
+            $data = [
+                'email' => $user->email,
+                'exp'   => time() + 60,
+            ];
+        }
+
+        // Encrypt with AES-256-CBC — nothing readable in the URL
+        $key       = hash('sha256', $secret, true);
+        $iv        = random_bytes(16);
+        $encrypted = openssl_encrypt(json_encode($data), 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
+        $payload   = base64_encode($iv . $encrypted);
+
+        // Sign to prevent tampering
         $signature = hash_hmac('sha256', $payload, $secret);
         $token     = $payload . '.' . $signature;
 
         $sparkproxyUrl = rtrim(env('SPARKPROXY_URL', 'https://app.sparkproxy.io'), '/');
+        $redirectUrl   = $sparkproxyUrl . '/sso/sparkcliks?token=' . urlencode($token);
 
-        return redirect($sparkproxyUrl . '/sso/sparkcliks?token=' . urlencode($token));
+        // Mark as synced after generating the full-profile token
+        if ($isFirstSync) {
+            $user->sparkproxy_synced = 1;
+            $user->save();
+        }
+
+        return view('Template::user.sso_redirect', compact('redirectUrl'));
     }
 }
+
