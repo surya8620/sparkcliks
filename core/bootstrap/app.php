@@ -43,6 +43,9 @@ return Application::configure(basePath: dirname(__DIR__))
         }
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Override Laravel's default route('login') fallback — this app uses route('user.login')
+        $middleware->redirectGuestsTo(fn() => route('user.login'));
+
         $middleware->group('web',[
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
@@ -78,14 +81,6 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Prevent Laravel's framework fallback from calling route('login') which doesn't exist.
-        // This app uses route('user.login') as its login route.
-        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
-            if (! $request->expectsJson()) {
-                return redirect()->guest(route('user.login'));
-            }
-        });
-
         $exceptions->shouldRenderJsonWhen(function () {
             if (request()->is('api/*')) {
                 return true;
