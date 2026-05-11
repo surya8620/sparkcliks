@@ -169,7 +169,7 @@
                     </div>
                 </li>
                 <li class="sidebar-menu-item sidebar-dropdown">
-                    <a class="nav-link" href="https://app.sparkproxy.io">
+                    <a class="nav-link" href="{{ route('user.sparkproxy.sso') }}">
                         <i class="menu-icon fa-solid fa fa-tasks"></i>
                         <span class="menu-title" data-toggle="tooltip" data-placement="right" title="Try for Free">@lang('SparkProxy')
 						<p class="menu-badge pill bg--danger ms-auto" style="text-align: center;">@lang('Try Now')</p></span>

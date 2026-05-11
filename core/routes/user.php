@@ -36,6 +36,9 @@ Route::namespace('User\Auth')->name('user.')->group(function () {
 });
 
 Route::middleware('auth')->name('user.')->group(function () {
+    // SparkProxy SSO — redirect logged-in Sparkcliks user to SparkProxy with a signed token
+    Route::get('sparkproxy', 'User\SsoController@redirectToSparkProxy')->name('sparkproxy.sso');
+
     Route::get('profile/update', 'User\UserController@userData')->name('data');
     Route::post('profile/update/submit', 'User\UserController@userDataSubmit')->name('data.submit');
 
