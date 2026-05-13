@@ -28,6 +28,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('disposable:update')->weekly();
+        $schedule->command('sparkproxy:retry-webhooks')->everyFiveMinutes();
         //$schedule->command('trial:expiry')->everyMinute();
     }
 

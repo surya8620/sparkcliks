@@ -320,6 +320,15 @@ class PaymentController extends Controller
         $data->btc_amo = 0;
         $data->btc_wallet = "";
         $data->trx = getTrx();
+
+        // Tag SparkProxy ref if this payment originated from SparkProxy
+        if (session()->has('sparkproxy_payment')) {
+            $spSession = session('sparkproxy_payment');
+            if (!empty($spSession['ref'])) {
+                $data->sparkproxy_ref = $spSession['ref'];
+            }
+        }
+
         $data->save();
         session()->put('Track', $data->trx);
         return to_route('user.billing.confirm');
@@ -384,6 +393,11 @@ class PaymentController extends Controller
             $deposit->save();
             }
             PaymentController::planUpdate($deposit);
+
+            // Fire SparkProxy webhook if this deposit originated from SparkProxy
+            if (!empty($deposit->sparkproxy_ref)) {
+                \App\Services\SparkProxyWebhookService::dispatch($deposit);
+            }
     }
 
     public static function planUpdate($deposit)
