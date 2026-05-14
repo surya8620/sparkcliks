@@ -82,11 +82,13 @@ class SparkProxyPaymentController extends Controller
     {
         $secret = env('SPARKPROXY_SECRET');
         if (empty($secret)) {
+            Log::error('SparkProxy payment: SPARKPROXY_SECRET is not configured');
             abort(500, 'SparkProxy integration is not configured on this server.');
         }
 
         $parts = explode('.', $token, 2);
         if (count($parts) !== 2) {
+            Log::warning('SparkProxy payment: invalid token format', ['ip' => request()->ip()]);
             abort(400, 'Invalid payment token format.');
         }
 
@@ -116,6 +118,7 @@ class SparkProxyPaymentController extends Controller
             || empty($payload['user_email'])
             || empty($payload['amount'])
         ) {
+            Log::warning('SparkProxy payment: malformed token payload', ['ip' => request()->ip(), 'payload' => $payload]);
             abort(400, 'Malformed payment token payload.');
         }
 
