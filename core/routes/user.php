@@ -37,6 +37,9 @@ Route::namespace('User\Auth')->name('user.')->group(function () {
 
 // SparkProxy payment page — handles its own SSO login via token, must be outside auth middleware
 Route::get('sparkproxy/pay', 'User\SparkProxyPaymentController@showPaymentPage')->name('user.sparkproxy.pay');
+Route::post('sparkproxy/pay/insert', 'Gateway\PaymentController@depositInsertSparkProxy')
+    ->middleware(['auth', 'throttle:30,1'])
+    ->name('user.sparkproxy.pay.insert');
 
 Route::middleware('auth')->name('user.')->group(function () {
     // SparkProxy SSO — redirect logged-in Sparkcliks user to SparkProxy with a signed token

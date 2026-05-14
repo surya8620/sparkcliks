@@ -9,7 +9,9 @@ use App\Models\User;
 use App\Constants\Status;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Handles inbound payment requests from SparkProxy.
@@ -36,18 +38,38 @@ class SparkProxyPaymentController extends Controller
 
         $payload = $this->decryptAndVerify($token);
 
-        // ── SSO-style login: find user by email ────────────────────────────
+        // ── SSO-style login: find or auto-create a shadow user by email ──────
         $email = strtolower(trim($payload['user_email'] ?? ''));
         $user  = User::where('email', $email)->first();
 
         if (!$user) {
-            abort(403, 'No SparkCliks account found for this email. Please sign up first.');
+            // Auto-create a locked shadow account — the SparkProxy customer
+            // never logs into SparkCliks directly; this is just so the normal
+            // deposit/payment flow (which requires user_id) works.
+            $baseUsername = preg_replace('/[^a-z0-9_]/', '', explode('@', $email)[0]) ?: 'sp_user';
+            $username     = $baseUsername;
+            $counter      = 1;
+            while (User::where('username', $username)->exists()) {
+                $username = $baseUsername . $counter++;
+            }
+
+            $user           = new User();
+            $user->username = $username;
+            $user->email    = $email;
+            $user->password = Hash::make(Str::random(32)); // random — user never logs in
+            $user->ev       = Status::YES;  // pre-verified, no email needed
+            $user->sv       = Status::YES;
+            $user->tv       = Status::ENABLE;
+            $user->ts       = Status::DISABLE;
+            $user->status   = Status::USER_ACTIVE; // active so payments process
+            $user->save();
+
+            Log::info('SparkProxy payment: shadow user auto-created', ['email' => $email, 'id' => $user->id]);
         }
 
         if (!Auth::check()) {
             Auth::login($user, remember: false);
         } elseif (Auth::id() !== $user->id) {
-            // Logged-in as a different user — switch to the correct account
             Auth::logout();
             Auth::login($user, remember: false);
         }
@@ -62,6 +84,7 @@ class SparkProxyPaymentController extends Controller
             'return_url'   => $payload['return_url'],
             'webhook_url'  => $payload['webhook_url'],
             'exp'          => $payload['exp'],
+            'domain'       => 'sparkproxy',
         ]]);
 
         $pageTitle   = 'Complete Your SparkProxy Payment';

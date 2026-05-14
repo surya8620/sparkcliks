@@ -321,11 +321,14 @@ class PaymentController extends Controller
         $data->btc_wallet = "";
         $data->trx = getTrx();
 
-        // Tag SparkProxy ref if this payment originated from SparkProxy
+        // Tag SparkProxy ref and domain if this payment originated from SparkProxy
         if (session()->has('sparkproxy_payment')) {
             $spSession = session('sparkproxy_payment');
             if (!empty($spSession['ref'])) {
                 $data->sparkproxy_ref = $spSession['ref'];
+            }
+            if (!empty($spSession['domain'])) {
+                $data->domain = $spSession['domain'];
             }
         }
 
@@ -334,8 +337,86 @@ class PaymentController extends Controller
         return to_route('user.billing.confirm');
     }
 
+    /**
+     * Deposit insert for payments originating from SparkProxy.
+     *
+     * Amount is taken from the signed session token (not user input) so the
+     * user can only choose which gateway to pay through — they cannot alter
+     * the amount. After payment confirms, the webhook fires back to SparkProxy
+     * which activates the plan on that side.
+     */
+    public function depositInsertSparkProxy(Request $request)
+    {
+        $request->validate([
+            'gateway'  => 'required|integer',
+            'currency' => 'required|string',
+        ]);
 
-    public function appDepositConfirm($hash)
+        $spSession = session('sparkproxy_payment');
+        if (empty($spSession['ref']) || empty($spSession['amount'])) {
+            $notify[] = ['error', 'Payment session expired. Please return to SparkProxy and try again.'];
+            return back()->withNotify($notify);
+        }
+
+        if (time() > (int) ($spSession['exp'] ?? 0)) {
+            $notify[] = ['error', 'Payment link has expired. Please return to SparkProxy and try again.'];
+            return back()->withNotify($notify);
+        }
+
+        $user = auth()->user();
+        $gate = GatewayCurrency::whereHas('method', function ($q) {
+            $q->where('status', Status::ENABLE);
+        })->where('method_code', $request->gateway)
+          ->where('currency', $request->currency)
+          ->first();
+
+        if (!$gate) {
+            $notify[] = ['error', 'Invalid gateway'];
+            return back()->withNotify($notify);
+        }
+
+        // Authoritative base amount from the signed token (in site currency)
+        $baseAmount = (float) $spSession['amount'];
+
+        // Calculate gateway charges on top of the base amount
+        $charge      = $gate->fixed_charge + ($baseAmount * $gate->percent_charge / 100);
+        $vatCharge   = ($baseAmount + $charge) * ($gate->vat_charge ?? 0) / 100;
+        $finalAmount = ($baseAmount + $charge + $vatCharge) * $gate->rate;
+
+        if ($finalAmount < $gate->min_amount || $finalAmount > $gate->max_amount) {
+            $notify[] = ['error', "Amount must be between {$gate->min_amount} and {$gate->max_amount} {$gate->currency}"];
+            return back()->withNotify($notify);
+        }
+
+        $data                      = new Deposit();
+        $data->user_id             = $user->id;
+        $data->inv_name            = trim("{$user->firstname} {$user->lastname}") ?: ($spSession['user_email'] ?? $user->email);
+        $data->method_code         = $gate->method_code;
+        $data->method_currency     = strtoupper($gate->currency);
+        $data->amount              = $baseAmount;
+        $data->price               = $baseAmount;
+        $data->charge              = $charge;
+        $data->vat                 = $vatCharge;
+        $data->discount_amount     = 0;
+        $data->discount_percentage = 0;
+        $data->rate                = $gate->rate;
+        $data->final_amo           = $finalAmount;
+        $data->total_price         = $baseAmount + $charge + $vatCharge;
+        $data->btc_amo             = 0;
+        $data->btc_wallet          = '';
+        $data->trx                 = getTrx();
+        $data->plans               = 'sparkproxy';
+        $data->plan_name           = $spSession['plan_name'] ?? 'SparkProxy Plan';
+        $data->credits             = 0;
+        $data->sparkproxy_ref      = $spSession['ref'];
+        $data->domain              = 'sparkproxy';
+
+        $data->save();
+        session()->put('Track', $data->trx);
+        return to_route('user.billing.confirm');
+    }
+
+
     {
         try {
             $id = decrypt($hash);

@@ -13,7 +13,7 @@
             <div class="card-body">
 
                 {{-- Plan summary --}}
-                <div class="alert alert-primary d-flex justify-content-between align-items-center py-2 mb-4">
+                <div class="alert alert-primary d-flex justify-content-between align-items-center py-2 mb-3">
                     <div>
                         <span class="fw-bold">{{ $spPayment['plan_name'] }}</span>
                         <small class="text-muted ms-2">@lang('via SparkProxy')</small>
@@ -24,22 +24,38 @@
                     </span>
                 </div>
 
-                <div class="alert alert-info py-2 mb-4">
-                    <small>
-                        <i class="las la-info-circle"></i>
-                        @lang('Choose any payment method below. Once your payment is confirmed, your SparkProxy plan will be activated automatically within seconds.')
-                    </small>
+                {{-- Fee breakdown (populated by JS once a gateway is chosen) --}}
+                <div class="card bg-light border-0 mb-3 fee-breakdown d-none">
+                    <div class="card-body py-2 px-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>@lang('Plan price')</span>
+                            <span>{{ gs('cur_sym') }}<span class="sp-base-amount">{{ number_format($spPayment['amount'], 2) }}</span></span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>@lang('Processing fee')</span>
+                            <span>{{ gs('cur_sym') }}<span class="sp-charge">0.00</span></span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1 sp-vat-row d-none">
+                            <span>@lang('VAT')</span>
+                            <span>{{ gs('cur_sym') }}<span class="sp-vat">0.00</span></span>
+                        </div>
+                        <hr class="my-1">
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>@lang('Total')</span>
+                            <span><span class="sp-currency">{{ gs('cur_text') }}</span> <span class="sp-total">{{ number_format($spPayment['amount'], 2) }}</span></span>
+                        </div>
+                        <div class="sp-conversion-row d-none">
+                            <small class="text-muted">
+                                @lang('≈') <span class="sp-converted"></span> <span class="sp-gateway-currency"></span>
+                                @lang('after conversion')
+                            </small>
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Payment form — posts to the existing billing insert route --}}
-                <form action="{{ route('user.billing.insert') }}" method="post" id="sparkproxy-pay-form">
+                <form action="{{ route('user.sparkproxy.pay.insert') }}" method="post" id="sparkproxy-pay-form" class="deposit-form">
                     @csrf
-                    <input type="hidden" name="currency">
-                    {{-- Hidden field carrying the SparkProxy ref; gets written to deposits.sparkproxy_ref --}}
-                    <input type="hidden" name="sparkproxy_ref" value="{{ $spPayment['ref'] }}">
-                    {{-- Override amount from the signed token (server validated) --}}
-                    <input type="hidden" name="sparkproxy_amount" value="{{ $spPayment['amount'] }}">
-                    <input type="hidden" name="sparkproxy_return_url" value="{{ $spPayment['return_url'] }}">
+                    <input type="hidden" name="currency" id="sp_currency">
 
                     <div class="payment-system-list is-scrollable gateway-option-list mb-3">
                         @foreach ($gatewayCurrency as $data)
@@ -59,9 +75,7 @@
                                        data-gateway='@php echo json_encode($data) @endphp'
                                        type="radio" name="gateway" value="{{ $data->method_code }}"
                                        @if (old('gateway')) @checked(old('gateway') == $data->method_code)
-                                       @else @checked($loop->first) @endif
-                                       data-min-amount="{{ showAmount($data->min_amount) }}"
-                                       data-max-amount="{{ showAmount($data->max_amount) }}">
+                                       @else @checked($loop->first) @endif>
                             </label>
                         @endforeach
 
@@ -73,9 +87,9 @@
                         @endif
                     </div>
 
-                    <button type="submit" class="btn btn--base w-100 py-3 fw-bold">
+                    <button type="submit" class="btn btn--base w-100 py-3 fw-bold" id="sp-pay-btn" disabled>
                         <i class="las la-lock me-2"></i>
-                        @lang('Pay') {{ gs('cur_sym') }}{{ number_format($spPayment['amount'], 2) }} @lang('Securely')
+                        @lang('Pay') <span class="sp-btn-amount">...</span> @lang('Securely')
                     </button>
                 </form>
 
@@ -91,3 +105,90 @@
     </div>
 </div>
 @endsection
+
+@push('script')
+<script>
+"use strict";
+(function ($) {
+    var baseAmount = {{ (float) $spPayment['amount'] }};
+    var siteCurrency = "{{ gs('cur_text') }}";
+    var curSym = "{{ gs('cur_sym') }}";
+
+    function calculate() {
+        var checked = $('.gateway-input:checked');
+        if (!checked.length) return;
+
+        var gateway = checked.data('gateway');
+        if (!gateway) return;
+
+        var charge    = parseFloat(gateway.fixed_charge) + (baseAmount * parseFloat(gateway.percent_charge) / 100);
+        var afterCharge = baseAmount + charge;
+        var vat       = afterCharge * parseFloat(gateway.vat_charge || 0) / 100;
+        var total     = afterCharge + vat;           // in site currency
+        var converted = total * parseFloat(gateway.rate); // in gateway currency
+
+        // Update breakdown
+        $('.sp-charge').text(charge.toFixed(2));
+        $('.sp-vat').text(vat.toFixed(2));
+        if (vat > 0) {
+            $('.sp-vat-row').removeClass('d-none');
+        } else {
+            $('.sp-vat-row').addClass('d-none');
+        }
+
+        var isForeign = gateway.currency !== siteCurrency && gateway.method.crypto != 1;
+        if (isForeign || gateway.method.crypto == 1) {
+            $('.sp-currency').text(gateway.currency);
+            $('.sp-total').text(converted.toFixed(gateway.method.crypto == 1 ? 8 : 2));
+            $('.sp-converted').text('');
+            $('.sp-conversion-row').addClass('d-none');
+        } else {
+            $('.sp-currency').text(siteCurrency);
+            $('.sp-total').text(total.toFixed(2));
+            if (parseFloat(gateway.rate) !== 1) {
+                $('.sp-converted').text(converted.toFixed(2));
+                $('.sp-gateway-currency').text(gateway.currency);
+                $('.sp-conversion-row').removeClass('d-none');
+            } else {
+                $('.sp-conversion-row').addClass('d-none');
+            }
+        }
+
+        // Min/max guard
+        var payable = isForeign || gateway.method.crypto == 1 ? converted : total;
+        if (payable < parseFloat(gateway.min_amount) || payable > parseFloat(gateway.max_amount)) {
+            $('#sp-pay-btn').attr('disabled', true);
+            $('.fee-breakdown').removeClass('d-none');
+            return;
+        }
+
+        // Button label
+        var displayAmt = (isForeign || gateway.method.crypto == 1)
+            ? converted.toFixed(gateway.method.crypto == 1 ? 8 : 2) + ' ' + gateway.currency
+            : curSym + total.toFixed(2);
+        $('.sp-btn-amount').text(displayAmt);
+
+        // Populate hidden currency input
+        $('#sp_currency').val(gateway.currency);
+
+        $('.fee-breakdown').removeClass('d-none');
+        $('#sp-pay-btn').removeAttr('disabled');
+    }
+
+    // Run on page load with first gateway selected
+    calculate();
+
+    // Re-run on gateway change
+    $(document).on('change', '.gateway-input', function () {
+        calculate();
+    });
+
+    // Show more gateways
+    $(document).on('click', '.more-gateway-option', function () {
+        $('.gateway-option.d-none').removeClass('d-none');
+        $(this).remove();
+    });
+}(jQuery));
+</script>
+@endpush
+
