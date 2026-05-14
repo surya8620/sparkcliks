@@ -2,6 +2,7 @@
 
 @push('style')
 <style>
+@verbatim
     *, *::before, *::after { box-sizing: border-box; }
     body { background: #f6f9fc; margin: 0; }
 
@@ -203,6 +204,7 @@
         .sp-summary__amount  { font-size: 26px; }
         .sp-pay-btn          { font-size: 15px; }
     }
+@endverbatim
 </style>
 @endpush
 
