@@ -417,6 +417,7 @@ class PaymentController extends Controller
     }
 
 
+    public function appDepositConfirm($hash)
     {
         try {
             $id = decrypt($hash);
