@@ -9,16 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('deposits', function (Blueprint $table) {
-            // 'sparkcliks' = normal SparkCliks payment
-            // 'sparkproxy' = initiated from SparkProxy (plan purchase)
-            $table->string('domain', 32)->nullable()->default(null)->after('sparkproxy_ref');
+            if (!Schema::hasColumn('deposits', 'domain')) {
+                // 'sparkcliks' = normal SparkCliks payment
+                // 'sparkproxy' = initiated from SparkProxy (plan purchase)
+                $table->string('domain', 32)->nullable()->default(null)->after('sparkproxy_ref');
+            }
         });
     }
 
     public function down(): void
     {
-        Schema::table('deposits', function (Blueprint $table) {
-            $table->dropColumn('domain');
-        });
+        // No-op: never drop production columns
+    });
     }
 };

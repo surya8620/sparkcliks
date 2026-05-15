@@ -9,18 +9,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('deposits', function (Blueprint $table) {
-            // Cross-reference back to SparkProxy's payment_requests.ref
-            $table->string('sparkproxy_ref', 64)->nullable()->unique()->after('from_api');
-            // Webhook delivery tracking
-            $table->timestamp('webhook_sent_at')->nullable()->after('sparkproxy_ref');
-            $table->tinyInteger('webhook_attempts')->default(0)->after('webhook_sent_at');
+            if (!Schema::hasColumn('deposits', 'sparkproxy_ref')) {
+                $table->string('sparkproxy_ref', 64)->nullable()->unique()->after('from_api');
+            }
+            if (!Schema::hasColumn('deposits', 'webhook_sent_at')) {
+                $table->timestamp('webhook_sent_at')->nullable()->after('sparkproxy_ref');
+            }
+            if (!Schema::hasColumn('deposits', 'webhook_attempts')) {
+                $table->tinyInteger('webhook_attempts')->default(0)->after('webhook_sent_at');
+            }
         });
     }
 
     public function down(): void
     {
-        Schema::table('deposits', function (Blueprint $table) {
-            $table->dropColumn(['sparkproxy_ref', 'webhook_sent_at', 'webhook_attempts']);
-        });
+        // No-op: never drop production columns
+    });
     }
 };

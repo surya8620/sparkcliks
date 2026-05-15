@@ -9,14 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->tinyInteger('sparkproxy_synced')->default(0)->after('tv');
+            if (!Schema::hasColumn('users', 'sparkproxy_synced')) {
+                $table->tinyInteger('sparkproxy_synced')->default(0)->after('tv');
+            }
         });
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('sparkproxy_synced');
-        });
+        // No-op: never drop production columns
+    });
     }
 };

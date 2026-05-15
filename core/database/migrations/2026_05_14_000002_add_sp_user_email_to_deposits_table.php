@@ -27,13 +27,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('deposits', function (Blueprint $table) {
-            if (Schema::hasColumn('deposits', 'webhook_url')) {
-                $table->dropColumn('webhook_url');
-            }
-            if (Schema::hasColumn('deposits', 'sp_user_email')) {
-                $table->dropColumn('sp_user_email');
-            }
-        });
+        // No-op: never drop production columns
     }
 };
