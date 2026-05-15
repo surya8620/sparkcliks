@@ -357,11 +357,9 @@ class PaymentController extends Controller
             $notify[] = ['error', 'Payment session expired. Please return to SparkProxy and try again.'];
             return back()->withNotify($notify);
         }
-
-        if (time() > (int) ($spSession['exp'] ?? 0)) {
-            $notify[] = ['error', 'Payment link has expired. Please return to SparkProxy and try again.'];
-            return back()->withNotify($notify);
-        }
+        // Note: token expiry is intentionally NOT re-checked here.
+        // It was validated at page load (SparkProxyPaymentController) to prevent link replay.
+        // Once the user has an authenticated session, they should be able to complete payment freely.
 
         $user = auth()->user();
         $gate = GatewayCurrency::whereHas('method', function ($q) {
@@ -390,7 +388,7 @@ class PaymentController extends Controller
 
         $data                      = new Deposit();
         $data->user_id             = $user->id;
-        $data->inv_name            = trim("{$user->firstname} {$user->lastname}") ?: ($spSession['user_email'] ?? $user->email);
+        $data->inv_name            = trim("{$user->firstname} {$user->lastname}") ?: ($spSession['sp_user_email'] ?? $user->email);
         $data->method_code         = $gate->method_code;
         $data->method_currency     = strtoupper($gate->currency);
         $data->amount              = $baseAmount;
@@ -410,6 +408,18 @@ class PaymentController extends Controller
         $data->credits             = 0;
         $data->sparkproxy_ref      = $spSession['ref'];
         $data->domain              = 'sparkproxy';
+        $data->sp_user_email       = $spSession['sp_user_email'] ?? null;
+        $data->webhook_url         = $spSession['webhook_url']   ?? null;
+        // Reuse existing billing columns for SparkProxy user's details
+        $data->company             = $spSession['org']     ?? null;
+        $data->vat_num             = $spSession['vat']     ?? null;
+        $data->address             = json_encode([
+            'country' => $spSession['country']      ?? '',
+            'address' => $spSession['address']      ?? '',
+            'state'   => $spSession['state']        ?? '',
+            'zip'     => $spSession['zip']          ?? '',
+            'city'    => $spSession['city']         ?? '',
+        ]);
 
         $data->save();
         session()->put('Track', $data->trx);

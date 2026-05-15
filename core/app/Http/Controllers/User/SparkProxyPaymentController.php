@@ -85,6 +85,16 @@ class SparkProxyPaymentController extends Controller
             'webhook_url'  => $payload['webhook_url'],
             'exp'          => $payload['exp'],
             'domain'       => 'sparkproxy',
+            // Actual SparkProxy end-user billing details (stored in existing deposit columns)
+            'sp_user_email' => $payload['user_email']   ?? '',
+            'country'       => $payload['country']      ?? '', // → address JSON
+            'country_code'  => $payload['country_code'] ?? '', // → address JSON
+            'state'         => $payload['state']        ?? '', // → address JSON
+            'city'          => $payload['city']         ?? '', // → address JSON
+            'zip'           => $payload['zip']          ?? '', // → address JSON
+            'address'       => $payload['address']      ?? '', // → address JSON
+            'org'           => $payload['org']          ?? '', // → company
+            'vat'           => $payload['vat']          ?? '', // → vat_num
         ]]);
 
         $pageTitle   = 'Complete Your SparkProxy Payment';

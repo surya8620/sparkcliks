@@ -21,14 +21,29 @@ class SparkProxyWebhookService
             return; // not a SparkProxy payment
         }
 
-        $webhookUrl = env('SPARKPROXY_WEBHOOK_URL');
+        // Use the URL stored on the deposit (from the original signed token).
+        // This ensures every deposit knows exactly where to deliver, regardless
+        // of env changes or multi-instance deployments.
+        // Fall back to env only for legacy deposits that predate the column.
+        $webhookUrl = $deposit->webhook_url ?: env('SPARKPROXY_WEBHOOK_URL');
         $secret     = env('SPARKPROXY_SECRET');
 
-        if (empty($webhookUrl) || empty($secret)) {
-            Log::error('SparkProxyWebhookService: SPARKPROXY_WEBHOOK_URL or SPARKPROXY_SECRET not set');
+        if (empty($webhookUrl)) {
+            Log::error('SparkProxyWebhookService: no webhook_url on deposit and SPARKPROXY_WEBHOOK_URL env not set', [
+                'deposit_id' => $deposit->id,
+                'ref'        => $deposit->sparkproxy_ref,
+            ]);
             return;
         }
 
+        if (empty($secret)) {
+            Log::error('SparkProxyWebhookService: SPARKPROXY_SECRET not set', [
+                'deposit_id' => $deposit->id,
+            ]);
+            return;
+        }
+
+        // Build a fresh token each dispatch so retries never send an expired one.
         $payload = [
             'ref'                    => $deposit->sparkproxy_ref,
             'amount'                 => (float) $deposit->amount,
@@ -39,7 +54,6 @@ class SparkProxyWebhookService
             'exp'                    => time() + 300, // 5-min window for delivery
         ];
 
-        // Encrypt + sign exactly as SparkProxy does for its outbound tokens
         $key       = hash('sha256', $secret, true);
         $iv        = random_bytes(16);
         $encrypted = openssl_encrypt(json_encode($payload), 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
@@ -48,28 +62,36 @@ class SparkProxyWebhookService
         $token     = $encoded . '.' . $signature;
 
         try {
-            $response = Http::timeout(10)->post($webhookUrl, ['token' => $token]);
+            $response = Http::timeout(15)->post($webhookUrl, ['token' => $token]);
 
             if ($response->successful()) {
                 $deposit->webhook_sent_at  = now();
                 $deposit->webhook_attempts = ($deposit->webhook_attempts ?? 0) + 1;
                 $deposit->save();
-                Log::info('SparkProxyWebhookService: webhook delivered', ['ref' => $deposit->sparkproxy_ref]);
+                Log::info('SparkProxyWebhookService: delivered', [
+                    'ref'        => $deposit->sparkproxy_ref,
+                    'deposit_id' => $deposit->id,
+                    'attempt'    => $deposit->webhook_attempts,
+                ]);
             } else {
                 $deposit->webhook_attempts = ($deposit->webhook_attempts ?? 0) + 1;
                 $deposit->save();
-                Log::warning('SparkProxyWebhookService: webhook failed', [
-                    'ref'    => $deposit->sparkproxy_ref,
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
+                Log::warning('SparkProxyWebhookService: HTTP failure', [
+                    'ref'        => $deposit->sparkproxy_ref,
+                    'deposit_id' => $deposit->id,
+                    'status'     => $response->status(),
+                    'body'       => $response->body(),
+                    'attempt'    => $deposit->webhook_attempts,
                 ]);
             }
         } catch (\Throwable $e) {
             $deposit->webhook_attempts = ($deposit->webhook_attempts ?? 0) + 1;
             $deposit->save();
-            Log::error('SparkProxyWebhookService: webhook exception', [
-                'ref'     => $deposit->sparkproxy_ref,
-                'message' => $e->getMessage(),
+            Log::error('SparkProxyWebhookService: exception', [
+                'ref'        => $deposit->sparkproxy_ref,
+                'deposit_id' => $deposit->id,
+                'message'    => $e->getMessage(),
+                'attempt'    => $deposit->webhook_attempts,
             ]);
         }
     }
