@@ -6,6 +6,8 @@ return new class extends Migration
 {
     public function up()
     {
+        if (!Schema::hasTable('web_traffic_reports')) return;
+
         Schema::table('web_traffic_reports', function (Blueprint $table) {
             try { $table->index('created_at'); } catch (\Throwable $e) {}
         });
