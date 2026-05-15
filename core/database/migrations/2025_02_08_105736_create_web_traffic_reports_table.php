@@ -6,8 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateWebTrafficReportsTable extends Migration
 {
-    public function up()
+    public function up(): void
     {
+        if (Schema::hasTable('web_traffic_reports')) return;
+
         Schema::create('web_traffic_reports', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); // Foreign key

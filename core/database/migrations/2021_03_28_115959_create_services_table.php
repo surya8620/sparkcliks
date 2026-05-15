@@ -11,8 +11,10 @@ class CreateServicesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
+        if (Schema::hasTable('services')) return;
+
         Schema::create('services', function (Blueprint $table) {
             $table->id();
             $table->integer('category_id')->default(0);

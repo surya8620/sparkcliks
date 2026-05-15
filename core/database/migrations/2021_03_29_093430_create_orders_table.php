@@ -11,8 +11,10 @@ class CreateOrdersTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
+        if (Schema::hasTable('orders')) return;
+
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id')->default(0);

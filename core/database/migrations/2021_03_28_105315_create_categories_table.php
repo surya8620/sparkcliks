@@ -11,8 +11,10 @@ class CreateCategoriesTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
+        if (Schema::hasTable('categories')) return;
+
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name', 50)->nullable();

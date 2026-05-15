@@ -11,8 +11,10 @@ class CreateAdminNotificationsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
+        if (Schema::hasTable('admin_notifications')) return;
+
         Schema::create('admin_notifications', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id')->default(0);
